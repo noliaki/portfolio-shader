@@ -1,0 +1,9 @@
+{
+  "extends": ["standard-with-typescript", "next", "prettier"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "import/order": ["error", { "newlines-between": "always" }]
+  }
+}
