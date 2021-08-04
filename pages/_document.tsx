@@ -17,8 +17,6 @@ class MyDocument extends Document {
   }
 
   render(): JSX.Element {
-    console.log(this.props.head)
-
     return (
       <Html lang="ja">
         <Head></Head>
