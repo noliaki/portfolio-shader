@@ -1,3 +1,6 @@
 [submodule "webgl-noise"]
 	path = webgl-noise
 	url = https://github.com/ashima/webgl-noise.git
+[submodule "glsl-easings"]
+	path = glsl-easings
+	url = https://github.com/glslify/glsl-easings.git

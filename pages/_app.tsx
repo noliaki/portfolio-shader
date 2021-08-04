@@ -1,10 +1,11 @@
-import type { AppProps /*, AppContext */ } from 'next/app'
+import type { AppProps } from 'next/app'
 import 'tailwindcss/tailwind.css'
+import '../styles/globals.css'
 import Head from 'next/head'
 
-import { BgCanvas } from '../components/BgCanvas'
+function PortfolioShader({ Component, pageProps }: AppProps): JSX.Element {
+  console.log('pageProps', pageProps)
 
-function App({ Component, pageProps }: AppProps): JSX.Element {
   return (
     <>
       <Head>
@@ -12,10 +13,10 @@ function App({ Component, pageProps }: AppProps): JSX.Element {
         <meta name="viewport" content="width=device-width" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <BgCanvas className="fixed inset-0 w-full h-full pointer-events-none" />
+
       <Component {...pageProps} />
     </>
   )
 }
 
-export default App
+export default PortfolioShader

@@ -2,6 +2,8 @@ export async function loadImage(src: string): Promise<HTMLImageElement> {
   return await new Promise((resolve, reject): void => {
     const img = new Image()
 
+    img.crossOrigin = 'anonymous'
+
     img.addEventListener(
       'load',
       (_event: Event): void => {

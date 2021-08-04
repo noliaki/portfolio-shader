@@ -64,32 +64,35 @@ const float maxDelay = 0.6;
 const float duration = 1.0 - maxDelay;
 
 void main(void) {
-
-  vec2 prevUv = imageUv(uResolution, uTexturePrevResolution, vUv);
-  vec2 nextUv = imageUv(uResolution, uTextureNextResolution, vUv);
-
-  float noise = snoise(vec3(vUv, uTime / 30000.0));
+  float noise = snoise(vec3(vUv, uTime / 12000.0));
   float fNoise = ((noise + 1.0) * 0.5);
 
   float delay = (vUv.x + vUv.y) * 0.5 * maxDelay;
-  float tProgress = clamp(uProgress - delay, 0.0, duration) / duration;
+  float tProgress = clamp(sineInOut(uProgress) - delay, 0.0, duration) / duration;
 
-  float tBezier = cubicBezier(0.0, 1.0, 0.0, tProgress);
+  float tBezier = cubicBezier(0.0, 1.0 + fNoise * 4.0, 0.0, sineInOut(tProgress));
 
-  float noiseR = snoise(vec3(vUv.x, noise, uTime / 50000.0)) * 0.05;
-  float noiseG = snoise(vec3(vUv, uTime / 12000.0)) * 0.7;
-  float noiseB = snoise(vec3(vUv.y, noise, uTime / 60000.0)) * 0.05;
+  float stagger = (tBezier * noise + 1.0);
 
-  float pr = texture2D(uTexturePrev, prevUv * (tBezier * 1.5 * noise + 1.0) + noiseR).r;
-  float pg = texture2D(uTexturePrev, prevUv * (tBezier * 1.5 * noise + 1.0) + noiseG).g;
-  float pb = texture2D(uTexturePrev, prevUv * (tBezier * 1.5 * noise + 1.0) + noiseB).b;
+  vec2 prevUv = imageUv(uResolution, uTexturePrevResolution, vUv) * stagger;
+  vec2 nextUv = imageUv(uResolution, uTextureNextResolution, vUv) * stagger;
 
-  float nr = texture2D(uTextureNext, nextUv * (tBezier * 1.5 * noise + 1.0) + noiseR).r;
-  float ng = texture2D(uTextureNext, nextUv * (tBezier * 1.5 * noise + 1.0) + noiseG).g;
-  float nb = texture2D(uTextureNext, nextUv * (tBezier * 1.5 * noise + 1.0) + noiseB).b;
+  float noiseR = snoise(vec3(vUv, uTime / 5000.0)) * 0.07;
+  float noiseG = snoise(vec3(vUv, uTime / 2500.0)) * 0.07;
+  float noiseB = snoise(vec3(vUv, uTime / 5500.0)) * 0.07;
 
-  vec4 prevColor = vec4(pr, pg, pb, 1.0) * dl * (tBezier * 2.0 + 1.0);
-  vec4 nextColor = vec4(nr, ng, nb, 1.0) * dl * (tBezier * 2.0 + 1.0);
+  float pr = texture2D(uTexturePrev, prevUv + noiseR).r;
+  float pg = texture2D(uTexturePrev, prevUv + noiseG).g;
+  float pb = texture2D(uTexturePrev, prevUv + noiseB).b;
+
+  float nr = texture2D(uTextureNext, nextUv + noiseR).r;
+  float ng = texture2D(uTextureNext, nextUv + noiseG).g;
+  float nb = texture2D(uTextureNext, nextUv + noiseB).b;
+
+  vec4 darkness = dl * (tBezier * 2.0 + 1.0);
+
+  vec4 prevColor = vec4(pr, pg, pb, 1.0) * darkness;
+  vec4 nextColor = vec4(nr, ng, nb, 1.0) * darkness;
 
   // vec4 prevOrigColor = texture2D(uTexturePrev, prevUv) * dl;
   // vec4 nextOrigColor = texture2D(uTextureNext, nextUv) * dl;
