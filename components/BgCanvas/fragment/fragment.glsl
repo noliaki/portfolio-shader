@@ -78,8 +78,8 @@ void main(void) {
   vec2 nextUv = imageUv(uResolution, uTextureNextResolution, vUv) * stagger;
 
   float noiseR = snoise(vec3(vUv, uTime / 5000.0)) * 0.07;
-  float noiseG = snoise(vec3(vUv, uTime / 2500.0)) * 0.07;
-  float noiseB = snoise(vec3(vUv, uTime / 5500.0)) * 0.07;
+  float noiseG = snoise(vec3(vUv * 0.9, uTime / 7000.0)) * 0.8;
+  float noiseB = snoise(vec3(vUv * 0.2, uTime / 4500.0)) * 0.07;
 
   float pr = texture2D(uTexturePrev, prevUv + noiseR).r;
   float pg = texture2D(uTexturePrev, prevUv + noiseG).g;

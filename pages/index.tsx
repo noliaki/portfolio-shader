@@ -1,6 +1,6 @@
 import Head from 'next/head'
 // import Image from 'next/image'
-import { useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { BgCanvas } from '../components/BgCanvas'
 
@@ -10,10 +10,25 @@ export default function Home(props: any): JSX.Element {
   const items = [
     '/img/shader-art.webp',
     '/img/sp-controller.webp',
+    '/img/cat-paticle.webp',
     '/img/voice-particle.webp',
+    '/img/tokyo-2020.webp',
+    '/img/rect-particle.webp',
   ]
 
   const imgEls = useRef<Array<HTMLLIElement | null>>([])
+  const [selectedIndex, setSelectedIndex] = useState<number | undefined>(
+    undefined
+  )
+
+  const onMouseEnter = useCallback((index: number): void => {
+    console.log(index)
+    setSelectedIndex(index)
+  }, [])
+
+  const onMouseLeave = useCallback(() => {
+    setSelectedIndex(undefined)
+  }, [])
 
   return (
     <article>
@@ -25,11 +40,12 @@ export default function Home(props: any): JSX.Element {
         className="fixed inset-0 w-full h-full pointer-events-none"
         bgImages={props.bgImages}
         contentImages={imgEls.current}
+        selectedIndex={selectedIndex}
       />
       <section className="container max-w-screen-md mx-auto ">
         <ul>
           {items.map((src: string, index: number) => {
-            const className = `opacity-20 shadow-2xl${
+            const className = `opacity-0 shadow-2xl${
               index === 0 ? '' : ' mt-24'
             }`
 
@@ -39,14 +55,25 @@ export default function Home(props: any): JSX.Element {
                 className={className}
                 ref={(ref) => (imgEls.current[index] = ref)}
               >
-                <img src={src} width={1024} height={576} alt="" />
-                {/* <Image
+                <button
+                  onMouseEnter={(event) => onMouseEnter(index)}
+                  onMouseLeave={onMouseLeave}
+                >
+                  <img
+                    src={src}
+                    width={1024}
+                    height={576}
+                    alt=""
+                    className="mix-blend-exclusion"
+                  />
+                  {/* <Image
                   src={src}
                   alt=""
                   width={1024}
                   height={576}
                   layout="responsive"
                 /> */}
+                </button>
               </li>
             )
           })}

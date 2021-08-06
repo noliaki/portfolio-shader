@@ -8,6 +8,9 @@ import {
   ShaderMaterial,
   Texture,
   Group,
+  BufferGeometry,
+  BufferAttribute,
+  DoubleSide,
 } from 'three'
 import { gsap } from 'gsap'
 
@@ -30,10 +33,12 @@ export function BgCanvas({
   className,
   bgImages,
   contentImages,
+  selectedIndex,
 }: {
   className?: string
   bgImages: BgImageItem[]
   contentImages: Array<HTMLLIElement | null>
+  selectedIndex?: number
 }): JSX.Element {
   const canvasEl = useRef<HTMLCanvasElement | null>(null)
   const renderer = useRef<WebGLRenderer | null>(null)
@@ -49,6 +54,36 @@ export function BgCanvas({
   const scrollTop = useRef(0)
   const vol = useRef(0)
   const rafId = useRef<number>()
+  const modalTween = useRef<gsap.core.Tween | null>(null)
+
+  useEffect(() => {
+    console.log('change selectedIndex: ', selectedIndex)
+    if (modalTween.current != null) {
+      modalTween.current.pause()
+    }
+
+    const meshes = group.current.children as Mesh[]
+    const progresses = meshes.map((mesh) => {
+      return {
+        value:
+          (mesh.material as ShaderMaterial).uniforms.uModalProgress.value ?? 0,
+      }
+    })
+
+    modalTween.current = gsap.to(progresses, {
+      value(index: number): number {
+        return index === selectedIndex ? 1 : 0
+      },
+      duration: 1,
+      ease: 'steps(8)',
+      onUpdate() {
+        meshes.forEach((mesh, index) => {
+          ;(mesh.material as ShaderMaterial).uniforms.uModalProgress.value =
+            progresses[index]?.value ?? 0
+        })
+      },
+    })
+  }, [selectedIndex])
 
   const update = useCallback(() => {
     const material = mesh.current.material as ShaderMaterial
@@ -56,7 +91,7 @@ export function BgCanvas({
     const diff = scrollTop.current - contentTop.current
     const volume = Math.abs(diff) > 0.0001 ? diff : 0
 
-    vol.current += (volume - vol.current) * 0.15
+    vol.current += (volume - vol.current) * 0.2
 
     material.uniforms.uTime.value = time
     material.uniformsNeedUpdate = true
@@ -85,6 +120,9 @@ export function BgCanvas({
     camera.current.right = winWidth / 2
     camera.current.bottom = -winHeight / 2
     camera.current.left = -winWidth / 2
+
+    camera.current.near = -10000
+    camera.current.far = 10000
 
     camera.current.updateProjectionMatrix()
   }, [])
@@ -122,6 +160,7 @@ export function BgCanvas({
           const mesh = group.current.children[i] as Mesh
 
           console.log(rect.top, scrollTop.current)
+          mesh.geometry = createContentGeometry(rect.width, rect.height)
 
           mesh.position.x = -winWidth * 0.5 + rect.width * 0.5 + rect.left
           mesh.position.y =
@@ -225,10 +264,14 @@ export function BgCanvas({
         uProgress: {
           value: 0,
         },
+        uModalProgress: {
+          value: 0,
+        },
       },
     })
 
     scene.current.add(mesh.current)
+    scene.current.add(group.current)
 
     renderer.current = new WebGLRenderer({
       canvas: canvasEl.current as HTMLCanvasElement,
@@ -263,8 +306,6 @@ export function BgCanvas({
         result.forEach((mesh) => {
           group.current.add(mesh)
         })
-
-        scene.current.add(group.current)
       })
       .catch(console.error)
 
@@ -277,6 +318,8 @@ export function BgCanvas({
         cancelAnimationFrame(rafId.current)
       }
 
+      renderer.current?.dispose()
+      scene.current?.clear()
       window.removeEventListener('resize', onResize)
       window.removeEventListener('scroll', onScroll)
     }
@@ -313,7 +356,7 @@ async function createImageMesh(
   texture.image = img
   texture.needsUpdate = true
 
-  mesh.geometry = new PlaneBufferGeometry(rect.width, rect.height, 100, 1)
+  mesh.geometry = createContentGeometry(rect.width, rect.height)
 
   mesh.material = new ShaderMaterial({
     vertexShader: imageVertex,
@@ -335,10 +378,131 @@ async function createImageMesh(
         value: 0,
       },
       uStagger: {
-        value: Math.random(),
+        value: Math.random() * -2 + 1,
+      },
+      uModalProgress: {
+        value: 0,
       },
     },
+    side: DoubleSide,
   })
 
   return mesh
+}
+
+function createContentGeometry(width: number, height: number): BufferGeometry {
+  // return new PlaneBufferGeometry(
+  //   width,
+  //   height,
+  //   30,
+  //   Math.floor((height / width) * 30)
+  // )
+
+  const segmentX = 30
+  const segmentY = Math.floor((height / width) * segmentX)
+  const geo = new BufferGeometry()
+
+  const top = -(height / 2)
+  const left = -(width / 2)
+
+  const position = []
+  const center = []
+  const uv = []
+  // const index = []
+
+  const polygonWidth = width / segmentX
+  const polygonHeight = height / segmentY
+
+  for (let i = 0, len = segmentX * segmentY; i < len; i++) {
+    const row = Math.floor(i / segmentX)
+    const col = i % segmentX
+
+    const x1 = col * polygonWidth + left
+    const y1 = row * polygonHeight + top
+
+    const x2 = x1 + polygonWidth
+    const y2 = y1
+
+    const x3 = x1
+    const y3 = y1 + polygonHeight
+
+    const centerX1 = (x1 + x2 + x3) / 3
+    const centerY1 = (y1 + y2 + y3) / 3
+
+    position.push(x1)
+    position.push(y1)
+    position.push(0)
+    uv.push(col / segmentX)
+    uv.push(row / segmentY)
+    center.push(centerX1)
+    center.push(centerY1)
+    center.push(0)
+
+    position.push(x2)
+    position.push(y2)
+    position.push(0)
+    uv.push((col + 1) / segmentX)
+    uv.push(row / segmentY)
+    center.push(centerX1)
+    center.push(centerY1)
+    center.push(0)
+
+    position.push(x3)
+    position.push(y3)
+    position.push(0)
+    uv.push(col / segmentX)
+    uv.push((row + 1) / segmentY)
+    center.push(centerX1)
+    center.push(centerY1)
+    center.push(0)
+
+    const x4 = x2
+    const y4 = y1
+
+    const x5 = x4
+    const y5 = y4 + polygonHeight
+
+    const x6 = x4 - polygonWidth
+    const y6 = y5
+
+    const centerX2 = (x4 + x5 + x6) / 3
+    const centerY2 = (y4 + y5 + y6) / 3
+
+    position.push(x4)
+    position.push(y4)
+    position.push(0)
+    uv.push((col + 1) / segmentX)
+    uv.push(row / segmentY)
+    center.push(centerX2)
+    center.push(centerY2)
+    center.push(0)
+
+    position.push(x5)
+    position.push(y5)
+    position.push(0)
+    uv.push((col + 1) / segmentX)
+    uv.push((row + 1) / segmentY)
+    center.push(centerX2)
+    center.push(centerY2)
+    center.push(0)
+
+    position.push(x6)
+    position.push(y6)
+    position.push(0)
+    uv.push(col / segmentX)
+    uv.push((row + 1) / segmentY)
+    center.push(centerX2)
+    center.push(centerY2)
+    center.push(0)
+  }
+
+  geo.setAttribute(
+    'position',
+    new BufferAttribute(new Float32Array(position), 3)
+  )
+  geo.setAttribute('uv', new BufferAttribute(new Float32Array(uv), 2))
+  geo.setAttribute('center', new BufferAttribute(new Float32Array(center), 3))
+  geo.setAttribute('index', new BufferAttribute(new Float32Array(uv), 2))
+
+  return geo
 }
