@@ -40,6 +40,8 @@ export function BgCanvas({
   contentImages: Array<HTMLLIElement | null>
   selectedIndex?: number
 }): JSX.Element {
+  console.log('run')
+
   const canvasEl = useRef<HTMLCanvasElement | null>(null)
   const renderer = useRef<WebGLRenderer | null>(null)
   const scene = useRef(new Scene())
@@ -59,7 +61,8 @@ export function BgCanvas({
   useEffect(() => {
     console.log('change selectedIndex: ', selectedIndex)
     if (modalTween.current != null) {
-      modalTween.current.pause()
+      // modalTween.current.pause()
+      modalTween.current.kill()
     }
 
     const meshes = group.current.children as Mesh[]
@@ -74,8 +77,9 @@ export function BgCanvas({
       value(index: number): number {
         return index === selectedIndex ? 1 : 0
       },
-      duration: 1,
-      ease: 'steps(8)',
+      duration: 0.4,
+      ease: 'none',
+      // ease: 'steps(10)',
       onUpdate() {
         meshes.forEach((mesh, index) => {
           ;(mesh.material as ShaderMaterial).uniforms.uModalProgress.value =

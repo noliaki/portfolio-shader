@@ -42,21 +42,69 @@ export default function Home(props: any): JSX.Element {
         contentImages={imgEls.current}
         selectedIndex={selectedIndex}
       />
-      <section className="container max-w-screen-md mx-auto ">
+      <section
+        className="fixed bottom-1 left-0"
+        style={{
+          textOrientation: 'upright',
+          writingMode: 'vertical-rl',
+          textAlign: 'right',
+        }}
+      >
+        <div>
+          <a
+            href="https://noliaki.netlify.app/about"
+            target="_blank"
+            rel="noreferrer"
+            className="bg-black text-white hover:bg-white hover:text-black"
+          >
+            山田 典明
+          </a>
+        </div>
+        <div>
+          <a
+            href="https://noliaki.netlify.app/product"
+            target="_blank"
+            rel="noreferrer"
+            className="bg-purple-600 hover:bg-purple-50"
+          >
+            他作品
+          </a>
+        </div>
+      </section>
+      <section className="container max-w-screen-md mx-auto py-10">
         <ul>
           {items.map((src: string, index: number) => {
-            const className = `opacity-0 shadow-2xl${
-              index === 0 ? '' : ' mt-24'
-            }`
+            const classNames = ['relative']
+
+            if (index !== 0) {
+              classNames.push('mt-24')
+            }
+
+            if (selectedIndex === index) {
+              classNames.push('is-active')
+            }
 
             return (
               <li
                 key={src}
-                className={className}
+                className={classNames.join(' ')}
                 ref={(ref) => (imgEls.current[index] = ref)}
               >
+                <dl className="absolute top-6 -left-6 max-w-full content">
+                  <dt>
+                    <span>Shader Art</span>
+                  </dt>
+                  <dd>ほげおほげお</dd>
+                  <dd>
+                    <a href="https://eloquent-beaver-e4ea68.netlify.app/">
+                      見る
+                    </a>
+                  </dd>
+                </dl>
                 <button
-                  onMouseEnter={(event) => onMouseEnter(index)}
+                  type="button"
+                  className="block relative"
+                  onMouseEnter={() => onMouseEnter(index)}
                   onMouseLeave={onMouseLeave}
                 >
                   <img
@@ -64,7 +112,7 @@ export default function Home(props: any): JSX.Element {
                     width={1024}
                     height={576}
                     alt=""
-                    className="mix-blend-exclusion"
+                    className="mix-blend-exclusion opacity-0 block"
                   />
                   {/* <Image
                   src={src}

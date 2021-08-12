@@ -77,17 +77,19 @@ void main(void) {
   vec2 prevUv = imageUv(uResolution, uTexturePrevResolution, vUv) * stagger;
   vec2 nextUv = imageUv(uResolution, uTextureNextResolution, vUv) * stagger;
 
+  float r = rand(vUv) * 0.01;
+
   float noiseR = snoise(vec3(vUv, uTime / 5000.0)) * 0.07;
   float noiseG = snoise(vec3(vUv * 0.9, uTime / 7000.0)) * 0.8;
   float noiseB = snoise(vec3(vUv * 0.2, uTime / 4500.0)) * 0.07;
 
-  float pr = texture2D(uTexturePrev, prevUv + noiseR).r;
-  float pg = texture2D(uTexturePrev, prevUv + noiseG).g;
-  float pb = texture2D(uTexturePrev, prevUv + noiseB).b;
+  float pr = texture2D(uTexturePrev, prevUv + noiseR + r).r;
+  float pg = texture2D(uTexturePrev, prevUv + noiseG + r).g;
+  float pb = texture2D(uTexturePrev, prevUv + noiseB + r).b;
 
-  float nr = texture2D(uTextureNext, nextUv + noiseR).r;
-  float ng = texture2D(uTextureNext, nextUv + noiseG).g;
-  float nb = texture2D(uTextureNext, nextUv + noiseB).b;
+  float nr = texture2D(uTextureNext, nextUv + noiseR + r).r;
+  float ng = texture2D(uTextureNext, nextUv + noiseG + r).g;
+  float nb = texture2D(uTextureNext, nextUv + noiseB + r).b;
 
   vec4 darkness = dl * (tBezier * 2.0 + 1.0);
 

@@ -8,6 +8,7 @@ uniform float uStagger;
 
 varying vec2 vUv;
 varying float vProgress;
+varying vec3 vCenter;
 
 vec3 hsvToRgb(float h, float s, float v){
   vec4 t = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -62,6 +63,14 @@ void main(void) {
   float noiseG = snoise(vec3(vUv + uStagger, uTime * 0.002));
   float noiseB = snoise(vec3(vUv + uStagger, uTime * 0.003));
 
+  float rdmR = snoise(vec3(vCenter.xy, uTime * 0.0001)) * 0.1;
+  float rdmG = snoise(vec3(vCenter.yx, uTime * 0.0003)) * 0.1;
+  float rdmB = snoise(vec3(vCenter.xy, uTime * 0.00001)) * 0.1;
+
+  float rdmT = mod(vUv.y * noiseR, 0.4);
+
+  vec2 uv2 = floor(vUv * 30.0) / 30.0;
+
   float r = texture2D(uTexture, vUv + cDiff * noiseR).r;
   float g = texture2D(uTexture, vUv + cDiff * noiseG).g;
   float b = texture2D(uTexture, vUv + cDiff * noiseB).b;
@@ -73,12 +82,7 @@ void main(void) {
     1.0
   );
 
-  vec4 mColor = vec4(
-    texture2D(uTexture, vUv + noiseR * 0.05).r,
-    texture2D(uTexture, vUv + noiseG * 0.05).g - ((snoise(vec3(vUv, uTime * 0.001)) + 1.0) * 0.5),
-    texture2D(uTexture, vUv + noiseB * 0.05).b,
-    1.0
-  );
+  vec4 mColor = texture2D(uTexture, vUv) + vec4(rdmR, rdmG, rdmB, 0.0);
 
   gl_FragColor = mix(
     rColor,
