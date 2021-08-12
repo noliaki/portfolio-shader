@@ -6,17 +6,15 @@ import { BgCanvas } from '../components/BgCanvas'
 
 import { fetchGraphQL } from '~/lib/api'
 
-export default function Home(props: any): JSX.Element {
-  const items = [
-    '/img/shader-art.webp',
-    '/img/sp-controller.webp',
-    '/img/cat-paticle.webp',
-    '/img/voice-particle.webp',
-    '/img/tokyo-2020.webp',
-    '/img/rect-particle.webp',
-  ]
+export interface Item {
+  src: string
+  el: HTMLLIElement | null
+}
 
-  const imgEls = useRef<Array<HTMLLIElement | null>>([])
+export default function Home(props: any): JSX.Element {
+  const items = useRef<Item[]>(
+    props.items.map((src: string): Item => ({ src, el: null }))
+  )
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>(
     undefined
   )
@@ -39,7 +37,7 @@ export default function Home(props: any): JSX.Element {
       <BgCanvas
         className="fixed inset-0 w-full h-full pointer-events-none"
         bgImages={props.bgImages}
-        contentImages={imgEls.current}
+        contentImages={items.current}
         selectedIndex={selectedIndex}
       />
       <section
@@ -73,7 +71,7 @@ export default function Home(props: any): JSX.Element {
       </section>
       <section className="container max-w-screen-md mx-auto py-10">
         <ul>
-          {items.map((src: string, index: number) => {
+          {items.current.map((item: Item, index: number) => {
             const classNames = ['relative']
 
             if (index !== 0) {
@@ -86,9 +84,9 @@ export default function Home(props: any): JSX.Element {
 
             return (
               <li
-                key={src}
+                key={item.src}
                 className={classNames.join(' ')}
-                ref={(ref) => (imgEls.current[index] = ref)}
+                ref={(ref) => (item.el = ref)}
               >
                 <dl className="absolute top-6 -left-6 max-w-full content">
                   <dt>
@@ -103,25 +101,10 @@ export default function Home(props: any): JSX.Element {
                 </dl>
                 <button
                   type="button"
-                  className="block relative"
+                  className="block relative btn"
                   onMouseEnter={() => onMouseEnter(index)}
                   onMouseLeave={onMouseLeave}
-                >
-                  <img
-                    src={src}
-                    width={1024}
-                    height={576}
-                    alt=""
-                    className="mix-blend-exclusion opacity-0 block"
-                  />
-                  {/* <Image
-                  src={src}
-                  alt=""
-                  width={1024}
-                  height={576}
-                  layout="responsive"
-                /> */}
-                </button>
+                ></button>
               </li>
             )
           })}
@@ -147,6 +130,16 @@ export async function getStaticProps(): Promise<any> {
   )
 
   return {
-    props: { bgImages: bgImages?.data?.backgroundImageCollection?.items ?? [] },
+    props: {
+      bgImages: bgImages?.data?.backgroundImageCollection?.items ?? [],
+      items: [
+        '/img/shader-art.webp',
+        '/img/sp-controller.webp',
+        '/img/cat-paticle.webp',
+        '/img/voice-particle.webp',
+        '/img/tokyo-2020.webp',
+        '/img/rect-particle.webp',
+      ],
+    },
   }
 }

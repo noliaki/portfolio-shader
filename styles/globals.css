@@ -16,6 +16,11 @@ body {
   font-family: 'Shippori Mincho', serif;
 }
 
+.btn {
+  width: 100%;
+  padding-top: 56.25%;
+}
+
 .content dt {
   position: relative;
   overflow: hidden;
