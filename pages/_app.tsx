@@ -4,8 +4,6 @@ import '../styles/globals.css'
 import Head from 'next/head'
 
 function PortfolioShader({ Component, pageProps }: AppProps): JSX.Element {
-  console.log('pageProps', pageProps)
-
   return (
     <>
       <Head>
@@ -13,7 +11,6 @@ function PortfolioShader({ Component, pageProps }: AppProps): JSX.Element {
         <meta name="viewport" content="width=device-width" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
       <Component {...pageProps} />
     </>
   )

@@ -73,12 +73,34 @@ export function BgCanvas({
       }
     })
 
+    const duration = Math.min(
+      Math.max(
+        ...meshes.map((mesh: Mesh, index: number) =>
+          Math.abs(
+            (index === selectedIndex ? 1 : 0) -
+              (mesh.material as ShaderMaterial).uniforms.uModalProgress.value
+          )
+        ),
+        0.3
+      ),
+      0.8
+    )
+    // meshes.reduce((acc, curr, index) => {
+    //   return Math.max(
+    //     Math.abs(
+    //       (index === selectedIndex ? 1 : 0) -
+    //         (curr.material as ShaderMaterial).uniforms.uModalProgress.value
+    //     ),
+    //     acc
+    //   )
+    // }, 0.5) * 0.6
+
     modalTween.current = gsap.to(progresses, {
       value(index: number): number {
         return index === selectedIndex ? 1 : 0
       },
-      duration: 0.4,
-      ease: 'none',
+      duration,
+      ease: 'power3.out',
       // ease: 'steps(10)',
       onUpdate() {
         meshes.forEach((mesh, index) => {
@@ -346,7 +368,7 @@ async function createImageMesh(
   mesh.position.x = -winWidth * 0.5 + rect.width * 0.5 + rect.left
   mesh.position.y = winHeight * 0.5 - rect.height * 0.5 - (rect.top + scrollTop)
 
-  const img = await loadImage(item.src)
+  const img = await loadImage(item.image.url)
 
   const texture = new Texture()
   texture.image = img

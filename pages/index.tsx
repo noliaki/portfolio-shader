@@ -6,14 +6,28 @@ import { BgCanvas } from '../components/BgCanvas'
 
 import { fetchGraphQL } from '~/lib/api'
 
+export interface ItemImage {
+  size: number
+  url: string
+  width: number
+  height: number
+}
+
+export interface ItemData {
+  title: string
+  url: string
+  description: string
+  image: ItemImage
+}
+
 export interface Item {
-  src: string
+  image: ItemImage
   el: HTMLLIElement | null
 }
 
 export default function Home(props: any): JSX.Element {
   const items = useRef<Item[]>(
-    props.items.map((src: string): Item => ({ src, el: null }))
+    props.items.map((item: ItemData): Item => ({ image: item.image, el: null }))
   )
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>(
     undefined
@@ -41,7 +55,7 @@ export default function Home(props: any): JSX.Element {
         selectedIndex={selectedIndex}
       />
       <section
-        className="fixed bottom-1 left-0"
+        className="fixed bottom-1 left-0 "
         style={{
           textOrientation: 'upright',
           writingMode: 'vertical-rl',
@@ -71,7 +85,7 @@ export default function Home(props: any): JSX.Element {
       </section>
       <section className="container max-w-screen-md mx-auto py-10">
         <ul>
-          {items.current.map((item: Item, index: number) => {
+          {props.items.map((itemData: ItemData, index: number) => {
             const classNames = ['relative']
 
             if (index !== 0) {
@@ -84,17 +98,21 @@ export default function Home(props: any): JSX.Element {
 
             return (
               <li
-                key={item.src}
+                key={itemData.url}
                 className={classNames.join(' ')}
-                ref={(ref) => (item.el = ref)}
+                ref={(ref) => (items.current[index].el = ref)}
               >
-                <dl className="absolute top-6 -left-6 max-w-full content">
+                <dl className="absolute top-6 -left-6 max-w-full content whitespace-pre-line">
                   <dt>
-                    <span>Shader Art</span>
+                    <span>{itemData.title}</span>
                   </dt>
-                  <dd>ほげおほげお</dd>
+                  <dd>{itemData.description}</dd>
                   <dd>
-                    <a href="https://eloquent-beaver-e4ea68.netlify.app/">
+                    <a
+                      href={itemData.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
                       見る
                     </a>
                   </dd>
@@ -129,17 +147,28 @@ export async function getStaticProps(): Promise<any> {
     }`
   )
 
+  const items = await fetchGraphQL(
+    `{
+      artCollection {
+        items {
+          title
+          url
+          description
+          image {
+            size
+            url
+            width
+            height
+          }
+        }
+      }
+    }`
+  )
+
   return {
     props: {
       bgImages: bgImages?.data?.backgroundImageCollection?.items ?? [],
-      items: [
-        '/img/shader-art.webp',
-        '/img/sp-controller.webp',
-        '/img/cat-paticle.webp',
-        '/img/voice-particle.webp',
-        '/img/tokyo-2020.webp',
-        '/img/rect-particle.webp',
-      ],
+      items: items?.data?.artCollection?.items ?? [],
     },
   }
 }

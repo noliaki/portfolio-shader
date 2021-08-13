@@ -73,7 +73,7 @@ float rand(vec2 co) {
   return t;
 }
 
-const float maxDelay = 0.5;
+const float maxDelay = 0.6;
 const float duration = 1.0 - maxDelay;
 const vec3 modalScale = vec3(1.05, 1.05, 1.0);
 
@@ -129,31 +129,31 @@ void main(void) {
   );
 
   vec2 dp = vec2(
-    center.x / (uSize.x * 0.5),
-    center.y / (uSize.y * 0.5)
+    (center.x / (uSize.x * 0.5) + 1.0) * 0.5,
+    (center.y / (uSize.y * 0.5) + 1.0) * 0.5
   );
   // vec2 dp = vec2(
   //   (center.x / (uSize.x * 0.5) + 1.0) * 0.5,
   //   (center.y / (uSize.y * 0.5) + 1.0) * 0.5
   // );
 
-  float delay = (rand(dp + position.xy * 0.001)) * maxDelay;
+  float delay = ((dp.x + dp.y) * 0.5) * maxDelay;
   // float duration = 1.0 - delay;
-  float tProgress = circularInOut(clamp((uModalProgress) - delay, 0.0, duration) / duration);
+  float tProgress = (clamp((uModalProgress) - delay, 0.0, duration) / duration);
+  float progressBezier = cubicBezier(0.0, 2.5, 1.0, tProgress);
 
-
-  vec3 result = mix(
+  vec3 result = cubicBezier(
     glP,
     // transformed * 3.0 * pow(snoise(vec3(center.xy, uTime / 1000.0)), 2.0),
-    // transformed * (snoise(vec3(center.xy, uTime / 1000.0)) + 1.0),
+    transformed * (snoise(vec3(position.xy, uTime / 1000.0)) + 1.0),
     // vec3(transformed.xy * 1.05, transformed.z),
     // position * offset * rand(vec2(uTime * 0.001, uModalProgress)),
     // position * noise,
     position * modalScale,
-    tProgress
+    progressBezier
   );
 
-  vProgress = tProgress;
+  vProgress = progressBezier;
   vCenter = center;
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(result, 1.0);
