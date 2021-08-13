@@ -23,6 +23,12 @@ body {
   padding-top: 56.25%;
 }
 /*
+.title-cover {
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+} */
+
+/*
 .content dt {
   position: relative;
   overflow: hidden;

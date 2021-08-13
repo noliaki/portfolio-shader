@@ -65,6 +65,10 @@ export function BgCanvas({
       modalTween.current.kill()
     }
 
+    if (group.current.children.length < 1) {
+      return
+    }
+
     const meshes = group.current.children as Mesh[]
     const progresses = meshes.map((mesh) => {
       return {

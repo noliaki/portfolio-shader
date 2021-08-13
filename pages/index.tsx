@@ -1,6 +1,13 @@
 import Head from 'next/head'
 // import Image from 'next/image'
-import { useCallback, useMemo, useRef, useState, createRef } from 'react'
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  createRef,
+  useEffect,
+} from 'react'
 import { gsap } from 'gsap'
 import type { MouseEvent } from 'react'
 
@@ -28,6 +35,9 @@ export interface Item {
 }
 
 export default function Home(props: any): JSX.Element {
+  // const titles = useRef(null)
+  // const titleCovers = useRef(null)
+
   const items = useRef<Item[]>(
     props.items.map((item: ItemData): Item => ({ image: item.image, el: null }))
   )
@@ -35,70 +45,152 @@ export default function Home(props: any): JSX.Element {
     undefined
   )
 
-  const tls = useRef<Map<HTMLLIElement | null, gsap.core.Timeline>>(new Map())
+  const tls = useRef<Map<number, gsap.core.Timeline>>(new Map())
 
   const createTl = useCallback(
     (el: HTMLLIElement | null, index: number): void => {
-      if (tls.current.has(el) || el == null) {
+      console.log('createTl')
+
+      if (el == null) {
         return
       }
-
-      const tl = gsap.timeline({
-        paused: true,
-      })
 
       const title = el.querySelector('.title-text')
       const titleCover = el.querySelector('.title-cover')
       const desc = el.querySelector('.desc-text')
 
-      console.log(title, titleCover)
-
       gsap.set(title, {
         visibility: 'hidden',
       })
-
       gsap.set(titleCover, {
         transformOrigin: '0% 50%',
         scaleX: 0,
       })
 
-      tl.to(titleCover, {
-        duration: 0.3,
-        scaleX: 1,
-      })
+      const tl = gsap
+        .timeline({
+          defaults: {
+            duration: 0.45,
+            ease: 'expo.inOut',
+          },
+        })
+        .fromTo(
+          titleCover,
+          {
+            scaleX: 0,
+          },
+          {
+            scaleX: 1,
+          }
+        )
+        .set(titleCover, {
+          transformOrigin: '0% 50%',
+        })
+        .set(title, {
+          visibility: 'hidden',
+        })
+        .set(title, {
+          visibility: 'visible',
+        })
+        .set(titleCover, {
+          transformOrigin: '100% 50%',
+        })
+        .fromTo(
+          titleCover,
+          {
+            scaleX: 1,
+          },
+          {
+            scaleX: 0,
+          }
+        )
 
-      tls.current.set(el, tl)
+      tl.seek(0.1)
+      tl.pause(0)
+      tls.current.set(index, tl)
     },
     []
   )
 
-  const onMouseEnter = useCallback((event: MouseEvent, index: number): void => {
-    console.log(index)
-    setSelectedIndex(index)
+  const onMouseEnter = useCallback(
+    (event: MouseEvent, index?: number): void => {
+      const activeIndex = items.current.findIndex(
+        (item: Item): boolean => item.el === event.currentTarget
+      )
 
-    // const tl = tls.current[index]
+      setSelectedIndex(activeIndex)
 
-    // if (tl instanceof gsap.core.Timeline) {
-    //   tl.resume()
-    // }
+      // const tl = tls.current[index]
 
-    tls.current.forEach(
-      (tl: gsap.core.Timeline | null, el: HTMLLIElement | null): void => {
-        console.log(el, event.currentTarget)
+      // if (tl instanceof gsap.core.Timeline) {
+      //   tl.resume()
+      // }
 
-        if (tl instanceof gsap.core.Timeline) {
-          if (el === event.currentTarget) {
-            tl.resume()
+      tls.current.forEach(
+        (tl: gsap.core.Timeline | null, key: number): void => {
+          // tl?.pause()
+          // tl?.reverse()
+          if (key === activeIndex) {
+            tl?.play()
           } else {
-            tl.reverse()
+            tl?.reverse()
           }
         }
-      }
-    )
-  }, [])
+      )
+    },
+    []
+  )
 
   const onMouseLeave = useCallback(() => {
     setSelectedIndex(undefined)
+
+    tls.current.forEach((tl: gsap.core.Timeline | null): void => {
+      // tl?.pause()
+      tl?.reverse()
+    })
+  }, [])
+
+  // const itemEl = useRef(
+  //   props.items.map((itemData: ItemData, index: number) => {
+  //     const classNames = ['content-item', 'relative']
+
+  //     if (index !== 0) {
+  //       classNames.push('mt-24')
+  //     }
+
+  //     return (
+  //       <li
+  //         key={itemData.title}
+  //         className={classNames.join(' ')}
+  //         ref={(ref) => {
+  //           items.current[index].el = ref
+  //         }}
+  //         onMouseEnter={onMouseEnter}
+  //         onMouseLeave={onMouseLeave}
+  //       >
+  //         <dl className="absolute top-6 -left-6 max-w-full content whitespace-pre-line">
+  //           <dt className="inline-block relative text-6xl overflow-hidden">
+  //             <span className="title-text">{itemData.title}</span>
+  //             <span className="title-cover absolute inset-0 w-full h-full bg-purple-600"></span>
+  //           </dt>
+  //           <dd className="desc-text overflow-hidden">
+  //             {itemData.description}
+  //           </dd>
+  //           <dd>
+  //             <a href={itemData.url} target="_blank" rel="noreferrer noopener">
+  //               見る
+  //             </a>
+  //           </dd>
+  //         </dl>
+  //       </li>
+  //     )
+  //   })
+  // )
+
+  useEffect(() => {
+    items.current.forEach((item: Item, index: number) => {
+      createTl(item.el, index)
+    })
   }, [])
 
   return (
@@ -151,25 +243,22 @@ export default function Home(props: any): JSX.Element {
               classNames.push('mt-24')
             }
 
-            if (selectedIndex === index) {
-              classNames.push('is-active')
-            }
-
             return (
               <li
-                key={itemData.url}
+                key={itemData.title}
                 className={classNames.join(' ')}
                 ref={(ref) => {
-                  createTl(ref, index)
                   items.current[index].el = ref
                 }}
-                onMouseEnter={(event: MouseEvent) => onMouseEnter(event, index)}
+                onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
               >
                 <dl className="absolute top-6 -left-6 max-w-full content whitespace-pre-line">
                   <dt className="inline-block relative text-6xl overflow-hidden">
-                    <span className="title-text">{itemData.title}</span>
-                    <span className="title-cover absolute inset-0 w-full h-full bg-purple-600"></span>
+                    <span className="title-text bg-white">
+                      {itemData.title}
+                    </span>
+                    <span className="title-cover block absolute inset-0 w-full h-full bg-purple-600"></span>
                   </dt>
                   <dd className="desc-text overflow-hidden">
                     {itemData.description}
