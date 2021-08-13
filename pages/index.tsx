@@ -1,6 +1,8 @@
 import Head from 'next/head'
 // import Image from 'next/image'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState, createRef } from 'react'
+import { gsap } from 'gsap'
+import type { MouseEvent } from 'react'
 
 import { BgCanvas } from '../components/BgCanvas'
 
@@ -33,9 +35,66 @@ export default function Home(props: any): JSX.Element {
     undefined
   )
 
-  const onMouseEnter = useCallback((index: number): void => {
+  const tls = useRef<Map<HTMLLIElement | null, gsap.core.Timeline>>(new Map())
+
+  const createTl = useCallback(
+    (el: HTMLLIElement | null, index: number): void => {
+      if (tls.current.has(el) || el == null) {
+        return
+      }
+
+      const tl = gsap.timeline({
+        paused: true,
+      })
+
+      const title = el.querySelector('.title-text')
+      const titleCover = el.querySelector('.title-cover')
+      const desc = el.querySelector('.desc-text')
+
+      console.log(title, titleCover)
+
+      gsap.set(title, {
+        visibility: 'hidden',
+      })
+
+      gsap.set(titleCover, {
+        transformOrigin: '0% 50%',
+        scaleX: 0,
+      })
+
+      tl.to(titleCover, {
+        duration: 0.3,
+        scaleX: 1,
+      })
+
+      tls.current.set(el, tl)
+    },
+    []
+  )
+
+  const onMouseEnter = useCallback((event: MouseEvent, index: number): void => {
     console.log(index)
     setSelectedIndex(index)
+
+    // const tl = tls.current[index]
+
+    // if (tl instanceof gsap.core.Timeline) {
+    //   tl.resume()
+    // }
+
+    tls.current.forEach(
+      (tl: gsap.core.Timeline | null, el: HTMLLIElement | null): void => {
+        console.log(el, event.currentTarget)
+
+        if (tl instanceof gsap.core.Timeline) {
+          if (el === event.currentTarget) {
+            tl.resume()
+          } else {
+            tl.reverse()
+          }
+        }
+      }
+    )
   }, [])
 
   const onMouseLeave = useCallback(() => {
@@ -86,7 +145,7 @@ export default function Home(props: any): JSX.Element {
       <section className="container max-w-screen-md mx-auto py-10">
         <ul>
           {props.items.map((itemData: ItemData, index: number) => {
-            const classNames = ['relative']
+            const classNames = ['content-item', 'relative']
 
             if (index !== 0) {
               classNames.push('mt-24')
@@ -100,13 +159,21 @@ export default function Home(props: any): JSX.Element {
               <li
                 key={itemData.url}
                 className={classNames.join(' ')}
-                ref={(ref) => (items.current[index].el = ref)}
+                ref={(ref) => {
+                  createTl(ref, index)
+                  items.current[index].el = ref
+                }}
+                onMouseEnter={(event: MouseEvent) => onMouseEnter(event, index)}
+                onMouseLeave={onMouseLeave}
               >
                 <dl className="absolute top-6 -left-6 max-w-full content whitespace-pre-line">
-                  <dt>
-                    <span>{itemData.title}</span>
+                  <dt className="inline-block relative text-6xl overflow-hidden">
+                    <span className="title-text">{itemData.title}</span>
+                    <span className="title-cover absolute inset-0 w-full h-full bg-purple-600"></span>
                   </dt>
-                  <dd>{itemData.description}</dd>
+                  <dd className="desc-text overflow-hidden">
+                    {itemData.description}
+                  </dd>
                   <dd>
                     <a
                       href={itemData.url}
@@ -117,12 +184,6 @@ export default function Home(props: any): JSX.Element {
                     </a>
                   </dd>
                 </dl>
-                <button
-                  type="button"
-                  className="block relative btn"
-                  onMouseEnter={() => onMouseEnter(index)}
-                  onMouseLeave={onMouseLeave}
-                ></button>
               </li>
             )
           })}
