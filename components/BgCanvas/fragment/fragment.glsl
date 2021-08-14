@@ -5,23 +5,8 @@ uniform vec2 uTexturePrevResolution;
 uniform vec2 uTextureNextResolution;
 uniform vec2 uResolution;
 uniform float uProgress;
-// uniform vec2 resolution;
-// uniform vec2 uTextureResolution;
 
 varying vec2 vUv;
-// varying vec3 vPosition;
-// varying float vIndex;
-// varying vec3 vCenter;
-// varying float vDiff;
-// varying vec3 vNormal;
-// varying float vProgress;
-
-vec3 hsvToRgb(float h, float s, float v){
-  vec4 t = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-  vec3 p = abs(fract(vec3(h) + t.xyz) * 6.0 - vec3(t.w));
-
-  return v * mix(vec3(t.x), clamp(p - vec3(t.x), 0.0, 1.0), s);
-}
 
 float rand(vec2 co) {
   float a = fract(dot(co, vec2(2.067390879775102, 12.451168662908249))) - 0.5;
@@ -57,8 +42,6 @@ float cubicBezier(float p0, float c0, float p1, float t) {
   );
 }
 
-const float ls = 1.8;
-// const vec4 dl = vec4(0.2, 0.06, 0.1, 1.0);
 const vec4 dl = vec4(0.3, 0.06, 0.3, 1.0);
 const float maxDelay = 0.6;
 const float duration = 1.0 - maxDelay;
@@ -68,9 +51,8 @@ void main(void) {
   float fNoise = ((noise + 1.0) * 0.5);
 
   float delay = (vUv.x + vUv.y) * 0.5 * maxDelay;
-  float tProgress = clamp(sineInOut(uProgress) - delay, 0.0, duration) / duration;
-
-  float tBezier = cubicBezier(0.0, 1.0 + fNoise * 4.0, 0.0, sineInOut(tProgress));
+  float tProgress = clamp(uProgress - delay, 0.0, duration) / duration;
+  float tBezier = cubicBezier(0.0, 1.0 + fNoise * 4.0, 0.0, tProgress);
 
   float stagger = (tBezier * noise + 1.0);
 
@@ -79,32 +61,22 @@ void main(void) {
 
   float r = rand(vUv) * 0.01;
 
-  float noiseR = snoise(vec3(vUv, uTime / 5000.0)) * 0.07;
-  float noiseG = snoise(vec3(vUv * 0.9, uTime / 7000.0)) * 0.8;
-  float noiseB = snoise(vec3(vUv * 0.2, uTime / 4500.0)) * 0.07;
+  float noiseR = snoise(vec3(vUv, uTime / 5000.0)) * 0.07 + r;
+  float noiseG = snoise(vec3(vUv * 0.9, uTime / 7000.0)) * 0.8 + r;
+  float noiseB = snoise(vec3(vUv * 0.2, uTime / 4500.0)) * 0.07 + r;
 
-  float pr = texture2D(uTexturePrev, prevUv + noiseR + r).r;
-  float pg = texture2D(uTexturePrev, prevUv + noiseG + r).g;
-  float pb = texture2D(uTexturePrev, prevUv + noiseB + r).b;
+  float pr = texture2D(uTexturePrev, prevUv + noiseR).r;
+  float pg = texture2D(uTexturePrev, prevUv + noiseG).g;
+  float pb = texture2D(uTexturePrev, prevUv + noiseB).b;
 
-  float nr = texture2D(uTextureNext, nextUv + noiseR + r).r;
-  float ng = texture2D(uTextureNext, nextUv + noiseG + r).g;
-  float nb = texture2D(uTextureNext, nextUv + noiseB + r).b;
+  float nr = texture2D(uTextureNext, nextUv + noiseR).r;
+  float ng = texture2D(uTextureNext, nextUv + noiseG).g;
+  float nb = texture2D(uTextureNext, nextUv + noiseB).b;
 
-  vec4 darkness = dl * (tBezier * 2.0 + 1.0);
+  float darkness = (tBezier * 2.0 + 1.0);
 
-  vec4 prevColor = vec4(pr, pg, pb, 1.0) * darkness;
-  vec4 nextColor = vec4(nr, ng, nb, 1.0) * darkness;
-
-  // vec4 prevOrigColor = texture2D(uTexturePrev, prevUv) * dl;
-  // vec4 nextOrigColor = texture2D(uTextureNext, nextUv) * dl;
-
-
-
-  // float t = (sin(uTime / 2000.0) + 1.0) * 0.5;
-
-  // vec4 prevChange = mix(prevColor, prevOrigColor, t);
-  // vec4 nextChange = mix(nextColor, nextOrigColor, t);
+  vec4 prevColor = vec4(pr * darkness * 0.3, pg * darkness * 0.06, pb * darkness * 0.3, 1.0);
+  vec4 nextColor = vec4(nr * darkness * 0.3, ng * darkness * 0.06, nb * darkness * 0.3, 1.0);
 
   gl_FragColor = mix(prevColor, nextColor, tProgress);
 }

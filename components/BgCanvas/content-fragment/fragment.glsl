@@ -1,7 +1,5 @@
 uniform float uTime;
 uniform sampler2D uTexture;
-uniform vec2 uTextureResolution;
-uniform vec2 uResolution;
 uniform float uProgress;
 uniform float uDiff;
 uniform float uStagger;
@@ -9,13 +7,6 @@ uniform float uStagger;
 varying vec2 vUv;
 varying float vProgress;
 varying vec3 vCenter;
-
-vec3 hsvToRgb(float h, float s, float v){
-  vec4 t = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-  vec3 p = abs(fract(vec3(h) + t.xyz) * 6.0 - vec3(t.w));
-
-  return v * mix(vec3(t.x), clamp(p - vec3(t.x), 0.0, 1.0), s);
-}
 
 float rand(vec2 co) {
   float a = fract(dot(co, vec2(2.067390879775102, 12.451168662908249))) - 0.5;
@@ -41,43 +32,23 @@ vec2 imageUv(vec2 resolution, vec2 imageResolution, vec2 uv){
   );
 }
 
-float cubicBezier(float p0, float c0, float p1, float t) {
-  float tn = 1.0 - t;
-
-  return (
-    tn * tn * p0 +
-    2.0 * tn * t * c0 +
-    t * t * p1
-  );
-}
-
-const float ls = 1.8;
-const vec3 dl = vec3(0.3, 0.06, 0.3);
-const float maxDelay = 0.6;
-const float duration = 1.0 - maxDelay;
-
 void main(void) {
   float cDiff = uDiff * 0.005;
   float time = uTime * 0.001;
 
-  float noiseR = snoise(vec3(vUv + uStagger, time));
-  float noiseG = snoise(vec3(vUv + uStagger, time * 2.0));
-  float noiseB = snoise(vec3(vUv + uStagger, time * 3.0));
+  float noiseR = snoise(vec3(vUv + uStagger, time)) * cDiff;
+  float noiseG = snoise(vec3(vUv + uStagger, time * 2.0)) * cDiff;
+  float noiseB = snoise(vec3(vUv + uStagger, time * 3.0)) * cDiff;
 
-  // float rdmR = (snoise(vec3(vCenter.xy, time * 0.1)) + 1.0) * 0.5 * 0.3;
-  // float rdmG = snoise(vec3(vCenter.yx, time * 0.3)) * 0.3;
-  // float rdmB = (snoise(vec3(vCenter.yx, time * 0.01)) + 1.0) * 0.5 * 0.3;
   float rdmR = (snoise(vec3(vCenter.xy, time * 0.1)) + 1.0) * 0.5 * 0.3;
   float rdmG = snoise(vec3(vCenter.yx, time * 0.3)) * 0.3;
   float rdmB = (snoise(vec3(vCenter.yx, time * 0.1)) + 1.0) * 0.5 * 0.3;
 
   float rdmT = ((rand(vUv) - 0.5) * 2.0) * 0.003;
 
-  // vec2 uv2 = floor(vUv * 30.0) / 30.0;
-
-  float r = texture2D(uTexture, vUv + cDiff * noiseR).r;
-  float g = texture2D(uTexture, vUv + cDiff * noiseG).g;
-  float b = texture2D(uTexture, vUv + cDiff * noiseB).b;
+  float r = texture2D(uTexture, vUv + noiseR).r;
+  float g = texture2D(uTexture, vUv + noiseG).g;
+  float b = texture2D(uTexture, vUv + noiseB).b;
 
   vec4 rColor = vec4(
     r,

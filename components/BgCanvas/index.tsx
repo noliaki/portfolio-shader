@@ -10,7 +10,6 @@ import {
   Group,
   BufferGeometry,
   BufferAttribute,
-  DoubleSide,
 } from 'three'
 import { gsap } from 'gsap'
 
@@ -61,7 +60,6 @@ export function BgCanvas({
   useEffect(() => {
     console.log('change selectedIndex: ', selectedIndex)
     if (modalTween.current != null) {
-      // modalTween.current.pause()
       modalTween.current.kill()
     }
 
@@ -85,19 +83,10 @@ export function BgCanvas({
               (mesh.material as ShaderMaterial).uniforms.uModalProgress.value
           )
         ),
-        0.3
+        0.8
       ),
-      0.8
+      1.2
     )
-    // meshes.reduce((acc, curr, index) => {
-    //   return Math.max(
-    //     Math.abs(
-    //       (index === selectedIndex ? 1 : 0) -
-    //         (curr.material as ShaderMaterial).uniforms.uModalProgress.value
-    //     ),
-    //     acc
-    //   )
-    // }, 0.5) * 0.6
 
     modalTween.current = gsap.to(progresses, {
       value(index: number): number {
@@ -105,7 +94,6 @@ export function BgCanvas({
       },
       duration,
       ease: 'power3.out',
-      // ease: 'steps(10)',
       onUpdate() {
         meshes.forEach((mesh, index) => {
           ;(mesh.material as ShaderMaterial).uniforms.uModalProgress.value =
@@ -132,7 +120,6 @@ export function BgCanvas({
 
       material.uniforms.uDiff.value = vol.current
       material.uniforms.uTime.value = time
-      // material.uniformsNeedUpdate = true
     })
 
     renderer.current?.render(scene.current, camera.current)
@@ -220,7 +207,6 @@ export function BgCanvas({
         img.naturalWidth,
         img.naturalHeight,
       ]
-      // material.uniformsNeedUpdate = true
 
       const progress = {
         value: 0,
@@ -228,11 +214,10 @@ export function BgCanvas({
 
       gsap.to(progress, {
         value: 1,
-        duration: 3,
-        ease: 'none',
+        duration: 2.5,
+        ease: 'power2.inOut',
         onUpdate() {
           material.uniforms.uProgress.value = progress.value
-          // material.uniformsNeedUpdate = true
         },
         onComplete() {
           material.uniforms.uProgress.value = 0
@@ -243,7 +228,6 @@ export function BgCanvas({
           ]
 
           material.uniforms.uTexturePrev.value.needsUpdate = true
-          // material.uniformsNeedUpdate = true
 
           imagesIndex.current = (imagesIndex.current + 1) % bgImages.length
 
@@ -406,20 +390,12 @@ async function createImageMesh(
         value: 0,
       },
     },
-    side: DoubleSide,
   })
 
   return mesh
 }
 
 function createContentGeometry(width: number, height: number): BufferGeometry {
-  // return new PlaneBufferGeometry(
-  //   width,
-  //   height,
-  //   30,
-  //   Math.floor((height / width) * 30)
-  // )
-
   const segmentX = 30
   const segmentY = Math.floor((height / width) * segmentX)
   const geo = new BufferGeometry()
@@ -430,7 +406,6 @@ function createContentGeometry(width: number, height: number): BufferGeometry {
   const position = []
   const center = []
   const uv = []
-  // const index = []
 
   const polygonWidth = width / segmentX
   const polygonHeight = height / segmentY
@@ -524,7 +499,6 @@ function createContentGeometry(width: number, height: number): BufferGeometry {
   )
   geo.setAttribute('uv', new BufferAttribute(new Float32Array(uv), 2))
   geo.setAttribute('center', new BufferAttribute(new Float32Array(center), 3))
-  geo.setAttribute('index', new BufferAttribute(new Float32Array(uv), 2))
 
   return geo
 }
