@@ -58,7 +58,6 @@ export function BgCanvas({
   const modalTween = useRef<gsap.core.Tween | null>(null)
 
   useEffect(() => {
-    console.log('change selectedIndex: ', selectedIndex)
     if (modalTween.current != null) {
       modalTween.current.kill()
     }
@@ -170,11 +169,19 @@ export function BgCanvas({
           const rect = item.el.getBoundingClientRect()
           const mesh = group.current.children[i] as Mesh
 
+          if (mesh == null) {
+            return
+          }
+
           mesh.geometry = createContentGeometry(rect.width, rect.height)
 
           mesh.position.x = -winWidth * 0.5 + rect.width * 0.5 + rect.left
           mesh.position.y =
             winHeight * 0.5 - rect.height * 0.5 - (rect.top + scrollTop.current)
+
+          const material = mesh.material as ShaderMaterial
+          material.uniforms.uResolution.value = [winWidth, winHeight]
+          material.uniforms.uSize.value = [rect.width, rect.height]
         })
       }
 
@@ -311,6 +318,7 @@ export function BgCanvas({
     }
 
     window.addEventListener('resize', onResize)
+    window.addEventListener('load', onResize)
     window.addEventListener('scroll', onScroll)
 
     update()
@@ -328,6 +336,7 @@ export function BgCanvas({
       renderer.current?.dispose()
       scene.current?.clear()
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('load', onResize)
       window.removeEventListener('scroll', onScroll)
     }
   }, [

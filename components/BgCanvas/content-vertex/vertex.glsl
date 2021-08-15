@@ -1,7 +1,6 @@
 attribute vec3 center;
 
 uniform float uTime;
-uniform vec2 uResolution;
 uniform vec2 uSize;
 uniform float uProgress;
 uniform float uDiff;
