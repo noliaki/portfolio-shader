@@ -224,7 +224,7 @@ export default function Home(props: any): JSX.Element {
   return (
     <>
       <Head>
-        <title>Portfolio Shader</title>
+        <title>portfolio</title>
         <meta name="description" content="いろいろ作ったやつ一覧" />
       </Head>
       <BgCanvas
@@ -265,7 +265,7 @@ export default function Home(props: any): JSX.Element {
                     <span className="title-cover block absolute inset-0 w-full h-full bg-purple-900"></span>
                   </h1>
                 </div>
-                <div className="mt-2 max-w-md sm:text-sm overflow-hidden">
+                <div className="mt-2 max-w-md text-sm sm:text-base overflow-hidden">
                   <div className="desc inline-block overflow-hidden relative">
                     <span className="desc-text inline-block bg-white py-1 px-2">
                       {itemData.description}
@@ -273,8 +273,8 @@ export default function Home(props: any): JSX.Element {
                     <span className="desc-cover block absolute inset-0 w-full h-full bg-purple-500"></span>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <div className="btn inline-block relative overflow-hidden sm:text-sm">
+                <div className="mt-4 text-sm sm:text-base">
+                  <div className="btn inline-block relative overflow-hidden">
                     <a
                       href={itemData.url}
                       target="_blank"
